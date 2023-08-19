@@ -1,6 +1,6 @@
 from pysentimiento import create_analyzer
-import collections
 import re
+
 
 # msg constructor and formatter
 class character_msg_constructor:
@@ -35,7 +35,7 @@ class character_msg_constructor:
     conversation_line_count = 0
     for idx, thisline in enumerate(splited):
       holder = conversation_line_count
-      if thisline.startswith(f'{self.name}:') or thisline.startswith('You:'): # if found talking line
+      if thisline.startswith(f'{self.name}:') or thisline.startswith(f'{self.name} :') or thisline.startswith('You:'): # if found talking line
         holder += 1
 
       if holder > conversation_line_count: # append talking line at each found
