@@ -23,8 +23,8 @@ class vits_vc_inference:
         
         print("Initializing Waifu Voice Conversion Pipeline...")
         # ask if download zoo model or select from local
-        want_to_use_zoo = input('Download New model from zoo? (Y/n): ').lower() in ['y', '']
-        if want_to_use_zoo:
+        no_zoo_load = input('Download New model from zoo? (y/N): ').lower() in ['n', '']
+        if not no_zoo_load:
             name, model_link, config_link = self.__select_model_from_zoo()
             self.pretrain_model_name = name
             self.model_link = model_link
@@ -33,7 +33,7 @@ class vits_vc_inference:
             print('No zoo model selected. Using local/cached model...')
             
         self.model_root = f'{file_root}/models/'
-        if want_to_use_zoo: # download zoo model
+        if not no_zoo_load: # download zoo model
             os.makedirs(f'{self.model_root}/{self.pretrain_model_name}/', exist_ok=True)
             load_checkpoint = True
             if not force_load_model:

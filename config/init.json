@@ -1,0 +1,11 @@
+{
+  "src_lang": "en",
+  "tgt_lang": "ja",
+  "voice_gender": "female",
+  "base_casual_model": "PygmalionAI/pygmalion-1.3b",
+  "base_casual_full": true,
+  "tts_trained": "lisa",
+  "char_name": "Lilia",
+  "user_name": "オニーチャン",
+  "translation_model": "google"
+}
