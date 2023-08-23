@@ -5,7 +5,6 @@ import torch
 from lib.translation.translate import translate_google
 import json
 from lib.Conversation.client_tts_rvc import tts_pipeline as rvc_tts_pipeline
-import asyncio
 from lib.translation.katakana import *
 
 # ---------- Config ----------
@@ -23,6 +22,8 @@ base_casual_full = cfg_init["base_casual_full"]
 char_name = cfg_init["char_name"]
 user_name = cfg_init["user_name"]
 translation_model = cfg_init["translation_model"]
+voice_model = cfg_init["voice_model"]
+
 
 # ---------- load Conversation model ----------
 print("Loading casual language model...")
@@ -53,10 +54,9 @@ else:
 print('--------Finished!----------')
 # --------------------------------------------------
 # TTS
-voice_model='RVC'
 if voice_model == 'RVC':
     main = rvc_tts_pipeline(
-        model_name="lisa",
+        model_name=tts_trained,
         speed=0,
         tts_voice=base_lang_voice,
         f0_up_key=0.0,
@@ -75,8 +75,8 @@ if voice_model == 'RVC':
 
 # --------- Define Waifu personality ----------
 talk = character_msg_constructor(char_name, f"""Species("Elf")
-Mind("sexy" + "cute" + "Loving" + "Based as Fuck")
-Personality("sexy" + "cute"+ "kind + "Loving" + "Based as Fuck")
+Mind("sexy" + "cute" + "Loving")
+Personality("sexy" + "cute"+ "kind + "Loving")
 Body("160cm tall" + "5 foot 2 inches tall" + "small breasts" + "white" + "slim")
 Description("{char_name} is 18 years old girl" + "she love pancake")
 Loves("Cats" + "Birds" + "Waterfalls")
@@ -95,10 +95,11 @@ app = FastAPI()
 # do a http server instead
 @app.get("/waifuapi")
 async def get_waifuapi(command: str, data: str, hist_cache: bool = False):
+    # split_counter = 0
+    # history = ''
     if command == "chat":
-        msg = data
         # ----------- Create Response --------------------------
-        msg = talk.construct_msg(msg, talk.history_loop_cache)  # construct message input and cache History model
+        msg = talk.construct_msg(data, talk.history_loop_cache)  # construct message input and cache History model
 
         ## ----------- Will move this to server later -------- (16GB ram needed at least)
         inputs = tokenizer(msg, return_tensors='pt')
@@ -108,20 +109,15 @@ async def get_waifuapi(command: str, data: str, hist_cache: bool = False):
         out = model.generate(**inputs, max_length=len(inputs['input_ids'][0]) + 80,  # todo must < 280
                              pad_token_id=tokenizer.eos_token_id)
         conversation = tokenizer.decode(out[0])
-        print("conversation .. \n" + conversation)
+        # print("conversation .. \n" + conversation)
         ## --------------------------------------------------
 
         ## get conversation in proper format and create history from [last_idx: last_idx+2] conversation
-        # talk.split_counter += 0
-        print("get_current_converse ..\n")
         current_converse = talk.get_current_converse(conversation)
-        print("answer ..\n")  # only print waifu answer since input already show
-        print(current_converse)
         if hist_cache:
             talk.history_loop_cache = '\n'.join(current_converse[:2])  # update history for next input message
 
         # -------------- use machine translation model to translate to japanese and submit to client --------------
-        print("cleaning ..\n")
         cleaned_text = talk.clean_emotion_action_text_for_speech(current_converse[1])  # clean text for speech
         cleaned_text = cleaned_text.replace(f"{char_name}: ", "")
         cleaned_text = cleaned_text.replace(f"{char_name} : ", "")
@@ -130,20 +126,18 @@ async def get_waifuapi(command: str, data: str, hist_cache: bool = False):
         emotion_to_express = 'netural'
 
         if len(cleaned_text) > 2:
-            print("cleaned_text\n" + cleaned_text)
 
             if translation:
                 # cleaned_text = katakana_converter(cleaned_text) # todo to fix
                 if translation_model == "google":
-                    cleaned_text = translate_google(cleaned_text, src_lang, tgt_lang)
+                    translated = translate_google(cleaned_text, src_lang, tgt_lang)
                 elif translation_model == "lm":
                     from lib.translation.pipeline import Translate
                     tgt_lang_mapping = {
                         "ja": "jpn_Jpan"
                     }
                     translator = Translate(device, tgt_lang_mapping[tgt_lang])
-                    cleaned_text = translator.translate(cleaned_text)  # translate to [language] if translation is enabled
-                print(cleaned_text)
+                    translated = translator.translate(cleaned_text)  # translate to [language] if translation is enabled
 
             # ----------- Waifu Expressing ----------------------- (emotion expressed)
             emotion = talk.emotion_analyze(current_converse[1])  # get emotion from waifu answer (last line)
@@ -154,10 +148,9 @@ async def get_waifuapi(command: str, data: str, hist_cache: bool = False):
             elif 'anger' in emotion:
                 emotion_to_express = 'angry'
 
-            print(f'Emotion to express: {emotion_to_express}')
-        await main.tts(cleaned_text, save_path=f'./audio_cache/dialog_cache.wav')
+        await main.tts(translated, save_path=f'./audio_cache/dialog_cache.wav')
 
-        return JSONResponse(content=f'{emotion_to_express}<split_token>{cleaned_text}')
+        return JSONResponse(content=f'{emotion_to_express}<split_token>{translated}<split_token>{cleaned_text}')
 
 
 # @app.get("/waifuapi_story")

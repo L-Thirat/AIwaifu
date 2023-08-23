@@ -7,7 +7,7 @@ import time
 
 # https://github.com/DenchiSoft/VTubeStudio#authentication refers to this websocket API
 class MBIS_vtube:
-    def __init__(self, plugin_name="MyBitchIsAi", plugin_developer='HRNPH', port=8001):
+    def __init__(self, plugin_name="MyIsAi", plugin_developer='HRNPH', port=8001):
         self.websocket = websocket.WebSocket()
         self.port = port
         self.plugin_name = plugin_name
@@ -85,17 +85,17 @@ class MBIS_vtube:
 ## init from mbis
 class Char_control(MBIS_vtube):
     # init all the things with super
-    def __init__(self, plugin_name="MyBitchIsAi", plugin_developer='HRNPH', port=8001):
+    def __init__(self, plugin_name="MyIsAi", plugin_developer='HRNPH', port=8001):
         super().__init__(plugin_name, plugin_developer, port)
 
     def express(self, expression:str, expression_dict=None):
         if expression_dict is None:
             expression_dict = {
                 "netural": None,
-                "agree": "N3",
-                "wonder": "N2",
+                "angry": "N3",
+                "wonder": "N1",
                 "shy": "N4",
-                "happy": "N1",
+                "happy": "N2",
                 "sad": "N5",
             } # This need to be updated to match your expressions in VTube Studio
     
@@ -119,6 +119,7 @@ class Char_control(MBIS_vtube):
                 "hotkeyID": hotkey_id,
             }
             print("sending key ...")
+            print(hotkey_id)
             result = self.send("HotkeyTriggerRequest", msg)
             return result
 

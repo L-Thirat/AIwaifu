@@ -11,22 +11,17 @@ class character_msg_constructor:
     self.emotion_analyzer = create_analyzer(task="emotion", lang="en")
     self.split_counter = 0
     self.history_loop_cache = ''
+    self.conversation_template = f"""{self.name}'s Persona: {self.persona}\n\n"""
   
   def construct_msg(self, text:str, conversation_history=None) -> str:
-    if conversation_history != None:
+    if conversation_history:
       self.conversation_history = f'{self.conversation_history}\n{conversation_history}' # add conversation history
 
       if len(self.conversation_history.split('\n')) > 40: # limit conversation history to prevent memory leak
         self.conversation_history = self.conversation_history.split('\n')[-6:]  # replace with last 4 lines
-        self.split_counter =  2 
+        self.split_counter =  2
 
-    conversation_template = f"""{self.name}'s Persona: {self.persona}
-
-    {self.conversation_history.strip()}
-    You: {text}
-    """
-
-    return '\n'.join([x.strip() for x in conversation_template.split('\n')])
+    return self.conversation_template + self.conversation_history.strip() + f"\nYou: {text}"
 
   # conversation formatter
   def get_current_converse(self, conversation_text:str) -> list:

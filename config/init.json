@@ -4,7 +4,8 @@
   "voice_gender": "female",
   "base_casual_model": "PygmalionAI/pygmalion-1.3b",
   "base_casual_full": true,
-  "tts_trained": "lisa",
+  "voice_model": "RVC",
+  "tts_trained": "charlotte",
   "char_name": "Lilia",
   "user_name": "オニーチャン",
   "translation_model": "google"

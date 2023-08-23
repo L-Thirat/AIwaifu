@@ -8,6 +8,9 @@
 *.so
 \audio_cache
 *.wav
+*.mp3
 \models
 .idea
 \pretrain
+\config
+text_cache
